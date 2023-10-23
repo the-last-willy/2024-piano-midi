@@ -1,8 +1,8 @@
 import * as m from "./midi.js";
 import {c_major_scale, Exercise} from "./exercise.js";
-import { Piano } from "./piano.js";
+import {Piano} from "./piano.js";
 
-const {Factory, EasyScore, System} = Vex.Flow;
+const {Factory, EasyScore, Stave, StaveNote, System, TickContext} = Vex.Flow;
 
 navigator.permissions.query({name: "midi", sysex: true}).then((result) => {
     if (result.state === "granted") {
@@ -60,10 +60,6 @@ function listInputsAndOutputs(midiAccess) {
     }
 }
 
-piano.addEventListener("keypress", (e) => {
-    console.log(e.detail)
-})
-
 let exercise = new Exercise(c_major_scale())
 exercise.addEventListener('playcorrectnote', () => {
     console.log('oui')
@@ -77,9 +73,9 @@ function onMIDIMessage(event) {
     let str = `MIDI message received at timestamp ${event.timeStamp}[${event.data.length} bytes]: `;
     let e = new m.MidiEvent(event.data)
     console.log(e)
-    if(e.name === 'KeyOnEvent')
+    if (e.name === 'KeyOnEvent')
         piano.press(m.key_to_english_name.get(e.key))
-    else if(e.name === 'KeyOffEvent') {
+    else if (e.name === 'KeyOffEvent') {
         piano.release(m.key_to_english_name.get(e.key))
     }
 }
@@ -91,20 +87,49 @@ function startLoggingMIDIInput(midiAccess, indexOfPort) {
 }
 
 const vf = new Factory({
-    renderer: {elementId: 'output', width: 500, height: 200},
+    renderer: {elementId: 'output', width: 1000, height: 300},
 });
 
-const score = vf.EasyScore();
-const system = vf.System();
+let ctx = vf.getContext();
 
-system
-    .addStave({
-        voices: [
-            score.voice(score.notes('(C4 E4 G4)/q, D4/8, E4, F4, G4', {stem: 'up'})),
-            score.voice(score.notes('C#4/h, C#4', {stem: 'down'})),
-        ],
-    })
-    .addClef('treble')
-    .addTimeSignature('4/4');
+let stave = new Stave(0, 50, 900).addClef('treble');
+stave.setContext(ctx).draw();
 
-vf.draw();
+let noteGroups = []
+
+let firstTime = null;
+
+function clearStave() {
+    for(let g of noteGroups) {
+        g.remove();
+    }
+    noteGroups = []
+    firstTime = null;
+}
+
+let interval = null
+
+piano.addEventListener("keypress", (e) => {
+    if(firstTime === null)
+        firstTime = Date.now();
+    if(interval === null)
+        interval = setInterval(() => clearStave(), 10 * 1e3);
+
+    let toNote = (x) => x[0] + '/' + x[1];
+
+    let tickCtx = new TickContext();
+    let note = new StaveNote({
+        clef: 'treble',
+        keys: [toNote(e.detail.note)],
+        duration: 4
+    });
+    let x = (Date.now() - firstTime) / 1e3 * 100;
+    note.setContext(ctx).setStave(stave);
+    tickCtx.addTickable(note);
+    tickCtx.preFormat().setX(x);
+    let g = ctx.openGroup()
+    note.draw();
+    ctx.closeGroup()
+    noteGroups.push(g)
+})
+
