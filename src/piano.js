@@ -9,6 +9,7 @@ export class Piano extends EventTarget {
             {
                 detail: {
                     note,
+                    // TODO: Time isn't the piano responsibility !
                     time: Date.now(),
                 }
             }
@@ -21,6 +22,7 @@ export class Piano extends EventTarget {
             {
                 detail: {
                     note,
+                    // TODO: Time isn't the piano responsibility !
                     time: Date.now(),
                 }
             }
