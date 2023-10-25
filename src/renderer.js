@@ -2,7 +2,15 @@
 
 const {Factory, EasyScore, Stave, StaveNote, StaveTempo, System, TickContext} = Vex.Flow;
 
+// function drawBarLine(ctx, x, y0, y1) {
+//     let group = ctx.openGroup();
+//     ctx.fillRect(x, y0, 1, y1 - y0);
+//     ctx.closeGroup();
+//     return group;
+// }
+
 export class Renderer {
+    cursor = null;
     trebleStaves = [];
 
     constructor() {
@@ -11,6 +19,8 @@ export class Renderer {
         });
 
         this.ctx = vf.getContext();
+
+        this.cursor = drawBarLine(this.ctx, 50, 50, 300);
 
         let staveX = 0
         for(let i = 0; i < 4; ++i) {
