@@ -14,7 +14,7 @@ export class Renderer {
 
         let staveX = 0
         for(let i = 0; i < 4; ++i) {
-            let stave = new Stave(200 * i, 50, 200)
+            let stave = new Stave(staveX, 50, 200)
             this.trebleStaves.push(stave)
 
             if(i === 0) {
