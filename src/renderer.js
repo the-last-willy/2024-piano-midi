@@ -1,8 +1,10 @@
 "use strict";
 
-const {Factory, EasyScore, Stave, StaveNote, System, TickContext} = Vex.Flow;
+const {Factory, EasyScore, Stave, StaveNote, StaveTempo, System, TickContext} = Vex.Flow;
 
 export class Renderer {
+    trebleStaves = [];
+
     constructor() {
         const vf = new Factory({
             renderer: {elementId: 'output', width: 1000, height: 300},
@@ -10,23 +12,42 @@ export class Renderer {
 
         this.ctx = vf.getContext();
 
-        this.trebleStave = new Stave(0, 50, 900).addClef('treble');
-        this.trebleStave.setContext(this.ctx).draw();
+        let staveX = 0
+        for(let i = 0; i < 4; ++i) {
+            let stave = new Stave(200 * i, 50, 200)
+            this.trebleStaves.push(stave)
 
-        this.bassStave = new Stave(0, 110, 900).addClef('bass');
+            if(i === 0) {
+                stave
+                    .addClef('treble')
+                    .setTimeSignature("4/4");
+                stave.format();
+                stave.setWidth(stave.getWidth() + stave.getNoteStartX());
+                staveX += stave.getNoteStartX();
+            }
+            
+            stave.setContext(this.ctx).draw();
+
+            staveX += 200;
+        }
+
+        this.bassStave = new Stave(0, 110, 800)
+            .addClef('bass')
+            .setTimeSignature("4/4");
         this.bassStave.setContext(this.ctx).draw();
 
         this.noteGroups = []
 
         this.firstTime = null;
 
-
-
         this.interval = null
+
+        this.tempo = new StaveTempo({bpm: 120, duration: 'q'}, 0, 0);
+        this.tempo.draw(this.trebleStaves[0], 0);
     }
 
     clearStave() {
-        for(let g of this.noteGroups) {
+        for (let g of this.noteGroups) {
             g.remove();
         }
         this.noteGroups = []
@@ -34,9 +55,9 @@ export class Renderer {
     }
 
     press(key) {
-        if(this.firstTime === null)
+        if (this.firstTime === null)
             this.firstTime = Date.now();
-        if(this.interval === null)
+        if (this.interval === null)
             this.interval = setInterval(() => this.clearStave(), 10 * 1e3);
 
         let toNote = (x) => x[0] + '/' + x[1];
@@ -48,7 +69,7 @@ export class Renderer {
             duration: 4
         });
         let x = (Date.now() - this.firstTime) / 1e3 * 100;
-        note.setContext(this.ctx).setStave(this.trebleStave);
+        note.setStave(this.trebleStaves[0]);
         tickCtx.addTickable(note);
         tickCtx.preFormat().setX(x);
         let g = this.ctx.openGroup()
