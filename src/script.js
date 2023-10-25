@@ -1,8 +1,7 @@
 import * as m from "./midi.js";
 import {c_major_scale, Exercise} from "./exercise.js";
 import {Piano} from "./piano.js";
-
-const {Factory, EasyScore, Stave, StaveNote, System, TickContext} = Vex.Flow;
+import {Renderer} from "./renderer.js";
 
 navigator.permissions.query({name: "midi", sysex: true}).then((result) => {
     if (result.state === "granted") {
@@ -86,50 +85,8 @@ function startLoggingMIDIInput(midiAccess, indexOfPort) {
     });
 }
 
-const vf = new Factory({
-    renderer: {elementId: 'output', width: 1000, height: 300},
-});
+let renderer = new Renderer();
+piano.addEventListener("keypress",
+    (e) => renderer.press(e.detail.note));
 
-let ctx = vf.getContext();
-
-let stave = new Stave(0, 50, 900).addClef('treble');
-stave.setContext(ctx).draw();
-
-let noteGroups = []
-
-let firstTime = null;
-
-function clearStave() {
-    for(let g of noteGroups) {
-        g.remove();
-    }
-    noteGroups = []
-    firstTime = null;
-}
-
-let interval = null
-
-piano.addEventListener("keypress", (e) => {
-    if(firstTime === null)
-        firstTime = Date.now();
-    if(interval === null)
-        interval = setInterval(() => clearStave(), 10 * 1e3);
-
-    let toNote = (x) => x[0] + '/' + x[1];
-
-    let tickCtx = new TickContext();
-    let note = new StaveNote({
-        clef: 'treble',
-        keys: [toNote(e.detail.note)],
-        duration: 4
-    });
-    let x = (Date.now() - firstTime) / 1e3 * 100;
-    note.setContext(ctx).setStave(stave);
-    tickCtx.addTickable(note);
-    tickCtx.preFormat().setX(x);
-    let g = ctx.openGroup()
-    note.draw();
-    ctx.closeGroup()
-    noteGroups.push(g)
-})
 
