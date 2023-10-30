@@ -112,13 +112,13 @@ let cMajorScale = [
 
 for(let i = 0; i < cMajorScale.length; ++i) {
     let [pitch, octave] = cMajorScale[i];
-    sequence.addNote(i/120, (() => {
+    sequence.addNote(i*60/120, (() => {
         let note = new Note();
         note.pitch = pitch;
         note.octave = octave;
         return note;
     })())
-    sequence.addNote(i/120, (() => {
+    sequence.addNote(i*60/120, (() => {
         let note = new Note();
         note.pitch = pitch;
         note.octave = octave - 1;
