@@ -2,6 +2,7 @@ import * as m from "./midi.js";
 import {c_major_scale, Exercise} from "./exercise.js";
 import {Piano} from "./piano.js";
 import {Renderer} from "./renderer.js";
+import {MusicSequence, Note} from "./musicsequence.js";
 
 navigator.permissions.query({name: "midi", sysex: true}).then((result) => {
     if (result.state === "granted") {
@@ -89,4 +90,40 @@ let renderer = new Renderer();
 piano.addEventListener("keypress",
     (e) => renderer.press(e.detail.note));
 
+let sequence = new MusicSequence();
 
+let cMajorScale = [
+    ["C", 4],
+    ["D", 4],
+    ["E", 4],
+    ["F", 4],
+    ["G", 4],
+    ["A", 4],
+    ["B", 4],
+    ["C", 5],
+    ["B", 4],
+    ["A", 4],
+    ["G", 4],
+    ["F", 4],
+    ["E", 4],
+    ["D", 4],
+    ["C", 4],
+];
+
+for(let i = 0; i < cMajorScale.length; ++i) {
+    let [pitch, octave] = cMajorScale[i];
+    sequence.addNote(i/120, (() => {
+        let note = new Note();
+        note.pitch = pitch;
+        note.octave = octave;
+        return note;
+    })())
+    sequence.addNote(i/120, (() => {
+        let note = new Note();
+        note.pitch = pitch;
+        note.octave = octave - 1;
+        return note;
+    })())
+}
+
+renderer.renderSequence(sequence)
