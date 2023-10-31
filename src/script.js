@@ -3,6 +3,7 @@ import {c_major_scale, Exercise} from "./exercise.js";
 import {Piano} from "./piano.js";
 import {Renderer} from "./renderer.js";
 import {MusicSequence, Note} from "./musicsequence.js";
+import {Metronome} from "./metronome.js";
 
 navigator.permissions.query({name: "midi", sysex: true}).then((result) => {
     if (result.state === "granted") {
@@ -127,3 +128,14 @@ for(let i = 0; i < cMajorScale.length; ++i) {
 }
 
 renderer.renderSequence(sequence)
+
+addEventListener("DOMContentLoaded", () => {
+    let metronome = new Metronome(240);
+    let ticksound = new Audio("./data/metronome-85688.mp3");
+    metronome.start();
+    metronome.addEventListener("ontick", () => {
+        ticksound.pause();
+        ticksound.currentTime = 0;
+        // ticksound.play();
+    });
+});
